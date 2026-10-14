@@ -14,7 +14,10 @@ __pycache__/
 *$py.class
 *.log
 
+# Local trace logs (may contain what users typed, e.g. income or pincode)
+logs/
+
 # Output & inspect files
-output.txt
-mcp_tools_output.txt
-*_output.txt
+# output.txt
+# mcp_tools_output.txt
+# *_output.txt

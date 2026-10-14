@@ -9,7 +9,8 @@ from mcp.client.streamable_http import streamable_http_client
 
 
 def load_env(file_path: str = ".env") -> None:
-    env_path = Path(__file__).resolve().parent / file_path
+    # This script lives in scripts/, so .env is in the parent (project root) folder.
+    env_path = Path(__file__).resolve().parent.parent / file_path
     if env_path.is_file():
         with open(env_path, encoding="utf-8") as f:
             for line in f:
