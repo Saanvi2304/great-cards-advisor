@@ -102,3 +102,61 @@ def call_gemini(
             f"Raw response: {raw_text[:500]}",
             retryable=True,
         ) from exc
+
+
+def call_gemini_text(
+    settings: Settings,
+    system_prompt: str,
+    messages: list[dict[str, str]],
+) -> str:
+    """Call Gemini and return a plain-text response (no schema constraint)."""
+    if not settings.gemini_api_key:
+        raise LLMError(
+            "GEMINI_API_KEY is not set in .env. "
+            "Get a free key at https://aistudio.google.com/apikey "
+            "and paste it into your .env file.",
+        )
+
+    try:
+        from google import genai
+        from google.genai import types
+    except ImportError as exc:
+        raise LLMError(
+            "google-genai is not installed. Run: pip install google-genai"
+        ) from exc
+
+    client = genai.Client(
+        api_key=settings.gemini_api_key,
+        http_options=types.HttpOptions(
+            timeout=int(settings.llm_timeout_seconds * 1000),
+        ),
+    )
+
+    config = types.GenerateContentConfig(
+        system_instruction=system_prompt,
+        temperature=0.3,
+    )
+
+    contents = _build_contents(messages)
+
+    try:
+        response = client.models.generate_content(
+            model=settings.llm_model,
+            contents=contents,
+            config=config,
+        )
+    except Exception as exc:
+        exc_str = str(exc).lower()
+        retryable = any(
+            keyword in exc_str
+            for keyword in ("429", "rate", "overloaded", "timeout", "unavailable")
+        )
+        safe_msg = str(exc).replace(settings.gemini_api_key or "", "***")
+        raise LLMError(f"Gemini API error: {safe_msg}", retryable=retryable) from exc
+
+    raw_text = response.text
+    if not raw_text:
+        raise LLMError("Gemini returned an empty response.")
+
+    log.debug("Raw Gemini text response: %s", raw_text[:200])
+    return raw_text

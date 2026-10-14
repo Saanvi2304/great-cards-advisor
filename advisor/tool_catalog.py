@@ -75,15 +75,41 @@ class ToolSpec:
 
 
 class ToolCatalog:
-    def __init__(self, snapshot_path: Path):
-        data = json.loads(snapshot_path.read_text(encoding="utf-8"))
+    """Registry of MCP tool definitions.
+
+    Construct via one of the classmethods:
+    - ``ToolCatalog.from_snapshot(path)`` — load from a local JSON file.
+    - ``ToolCatalog.from_mcp_tools(tools)`` — load from a live MCP
+      ``list_tools()`` response so the app can run without the snapshot.
+    """
+
+    def __init__(self, tools_list: list[dict[str, Any]]):
         self.tools: dict[str, ToolSpec] = {
             t["name"]: ToolSpec(t["name"], t["description"], t["input_schema"])
-            for t in data["tools"]
+            for t in tools_list
         }
         missing = sorted(ALLOWED_TOOLS - self.tools.keys())
         if missing:
             raise CatalogError(f"Tool snapshot is missing required tools: {', '.join(missing)}")
+
+    @classmethod
+    def from_snapshot(cls, snapshot_path: Path) -> "ToolCatalog":
+        """Load from a local JSON snapshot file (data/mcp_tools.json)."""
+        data = json.loads(snapshot_path.read_text(encoding="utf-8"))
+        return cls(data["tools"])
+
+    @classmethod
+    def from_mcp_tools(cls, mcp_tools: list) -> "ToolCatalog":
+        """Build from the MCP SDK's ``list_tools()`` result objects."""
+        tools_list = [
+            {
+                "name": t.name,
+                "description": t.description or "",
+                "input_schema": t.inputSchema,
+            }
+            for t in mcp_tools
+        ]
+        return cls(tools_list)
 
     # ---- generic lookups ---------------------------------------------------
     def schema(self, tool: str) -> dict[str, Any]:

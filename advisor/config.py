@@ -57,6 +57,7 @@ class Settings:
     llm_timeout_seconds: float
     # repr=False keeps the key out of any accidental print/log of Settings.
     gemini_api_key: str | None = field(default=None, repr=False)
+    mcp_url: str | None = None
     log_dir: Path = LOG_DIR
     tools_snapshot: Path = TOOLS_SNAPSHOT
 
@@ -83,4 +84,5 @@ def load_settings() -> Settings:
         llm_model=model,
         llm_timeout_seconds=timeout,
         gemini_api_key=_clean(os.getenv("GEMINI_API_KEY")),
+        mcp_url=_clean(os.getenv("MCP_URL")),
     )

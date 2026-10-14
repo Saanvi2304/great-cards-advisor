@@ -59,3 +59,20 @@ def generate_structured(
         return call_gemini(settings, system_prompt, messages, schema)
     else:
         raise LLMError(f"Unknown LLM provider: {settings.llm_provider!r}")
+
+
+def generate_text(
+    settings: Settings,
+    system_prompt: str,
+    messages: list[dict[str, str]],
+) -> str:
+    """Call the configured LLM and return a plain-text response.
+
+    Used for composing natural-language answers (as opposed to the
+    structured JSON extraction performed by ``generate_structured``).
+    """
+    if settings.llm_provider == "gemini":
+        from advisor.llm.gemini import call_gemini_text
+        return call_gemini_text(settings, system_prompt, messages)
+    else:
+        raise LLMError(f"Unknown LLM provider: {settings.llm_provider!r}")

@@ -102,9 +102,10 @@ class PlannedStep(BaseModel):
     tool: str
     arguments: dict[str, Any]
     purpose: str
-    # Arguments that will be filled from an earlier step's result in a later stage.
+    # Arguments that will be filled from an earlier step's result.
     pending_arguments: dict[str, str] = Field(default_factory=dict)
-    executed: bool = False  # Always False in Step 1.
+    executed: bool = False
+    result: Optional[dict[str, Any]] = None
 
 
 class TurnResult(BaseModel):
@@ -120,6 +121,7 @@ class TurnResult(BaseModel):
     policy_notes: list[str] = Field(default_factory=list)
     follow_ups: list[str] = Field(default_factory=list)
     out_of_scope_reason: Optional[str] = None
+    answer: Optional[str] = None
     error: Optional[str] = None
 
     @property
